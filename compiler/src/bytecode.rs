@@ -11,6 +11,11 @@ pub enum FloatSize {
 }
 
 pub enum Instruction {
+  // logical ops
+  And(IntSize),
+  Or(IntSize),
+  Not(IntSize),
+
   // basic arithmetic
   Add(IntSize),
   Addf(FloatSize),
