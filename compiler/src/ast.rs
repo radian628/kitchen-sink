@@ -23,6 +23,20 @@ pub enum Literal {
     String(Tag<String>)
 }
 
+pub enum Comp {
+    LessThan, LessThanEq, Eq, GreaterThanEq, GreaterThan,
+    NotEq
+}
+
+pub enum MethodName {
+    Normal(String),
+    Plus, Minus, Times, Divide, Modulo, Comparison(Comp), Dereference, Reference, Ternery,
+    BoolAnd, BoolOr, BoolNot, BoolXor,
+    BitAnd, BitOr, BitNot, BitXor, BitShl, BitShr, BitUShr,
+    Cast, Bitcast,
+    ArrayIndex
+}
+
 pub enum Expression {
     Literal(Tag<Literal>),
     MethodCall { receiver: Option<BTExpression>, name: Tag<String>, args: Vec<Tag<Expression>>, type_params: Vec<Tag<Tpe>> },
