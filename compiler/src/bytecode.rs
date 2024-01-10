@@ -49,5 +49,7 @@ pub enum Instruction {
   Pop(usize),
 
   // move some data to the top of the stack
-  Mov(std::ptr, IntSize)
+  Load(std::ptr, IntSize),
+  // store whatever is at the top of the stack somewhere
+  Store(std::ptr, IntSize)
 }
