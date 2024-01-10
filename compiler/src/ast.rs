@@ -34,12 +34,15 @@ pub enum MethodName {
     BoolAnd, BoolOr, BoolNot, BoolXor,
     BitAnd, BitOr, BitNot, BitXor, BitShl, BitShr, BitUShr,
     Cast, Bitcast,
-    ArrayIndex
+    ArrayIndex,
+    Return,
+    ExprAssign
 }
 
 pub enum Expression {
     Literal(Tag<Literal>),
     MethodCall { receiver: Option<BTExpression>, name: Tag<String>, args: Vec<Tag<Expression>>, type_params: Vec<Tag<Tpe>> },
     VarAccess(Tag<String>),
-    FieldAccess { left: BTExpression, name: Tag<String> }
+    FieldAccess { left: BTExpression, name: Tag<String> },
+    VarDef { name: Tag<String>, explicit_type: Option<Tag<Tpe>>, value: BTExpression }
 }
