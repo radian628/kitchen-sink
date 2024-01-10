@@ -36,7 +36,9 @@ pub enum MethodName {
     Cast, Bitcast,
     ArrayIndex,
     Return,
-    ExprAssign
+    ExprAssign,
+    // stuff like +=, -=, &&=, et cetera.
+    ExprAssignOp(Box<MethodName>)
 }
 
 pub enum Expression {
