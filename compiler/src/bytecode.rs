@@ -85,5 +85,8 @@ pub enum Instruction {
     PushSP,
 
     /// pushes the program counter (u64) to the stack
-    PushIP
+    PushIP,
+
+    /// pushes the size of the heap in bytes (u64) to the stack
+    PushMaxHeapSize
 }
