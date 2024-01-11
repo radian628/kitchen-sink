@@ -63,7 +63,7 @@ pub enum Instruction {
     /// unconditionally jump to the given address
     Jmp(i64),
     /// pops the last item from the stack with the given size, then pops an address.  If the first value is zero, jumps the address
-    Jz(IntSize, i64),
+    Jz(IntSize),
 
     /// pops a 32 bit file descriptor, a destination address, and a 32 bit max size from the stack, then tries to read from the descriptor.  Returns the number of bytes read, or -1 if there's an error
     Read,
