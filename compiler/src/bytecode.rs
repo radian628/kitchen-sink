@@ -79,5 +79,11 @@ pub enum Instruction {
     /// pop the last word from the stack, read `size` bytes of memory at that location, and push it to the stack
     Load { size: IntSize },
     /// pop the last word from the stack as an address, pop `size` more, and store that in memnory
-    Store { size: IntSize }
+    Store { size: IntSize },
+
+    /// pushes the stack pointer (u64) to the stack
+    PushSP,
+
+    /// pushes the program counter (u64) to the stack
+    PushIP
 }
