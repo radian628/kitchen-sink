@@ -170,7 +170,12 @@ impl VM {
             Instruction::And(size) => sizes!(int biop size; a, b => a + b),
             Instruction::Or(size) => sizes!(int biop size; a, b => a | b),
             Instruction::Xor(size) => sizes!(int biop size; a, b => a ^ b),
-            Instruction::Not(_) => todo!(),
+            Instruction::Not(size) => match size {
+                IntSize::I8 => { let v = self.pop_u8()?; self.push_u8(!v)?; }
+                IntSize::I16 => { let v = self.pop_u16()?; self.push_u16(!v)?; }
+                IntSize::I32 => { let v = self.pop_u32()?; self.push_u32(!v)?; }
+                IntSize::I64 => { let v = self.pop_u64()?; self.push_u64(!v)?; }
+            },
             Instruction::Shl(size) => sizes!(int biop size; a, b => a << b),
             Instruction::Shr(size) => sizes!(signed int biop size; a, b => a >> b),
             Instruction::UShr(size) => sizes!(int biop size; a, b => a >> b),
@@ -196,17 +201,27 @@ impl VM {
                     Some(std::cmp::Ordering::Less) => -1,
                     Some(std::cmp::Ordering::Equal) => 0,
                     Some(std::cmp::Ordering::Greater) => 1,
-                    None => todo!()
+                    None => todo!("float compare failed, TODO: figure out return for this, or fault?")
                 });
             },
             Instruction::Jmp(_) => todo!(),
             Instruction::Jz(_) => todo!(),
             Instruction::Read => todo!(),
             Instruction::Write => todo!(),
-            Instruction::Push(_) => todo!(),
-            Instruction::Pop(_) => todo!(),
-            Instruction::Load { size } => todo!(),
-            Instruction::Store { size } => todo!(),
+            Instruction::Push(v) => self.push_u8(*v)?,
+            Instruction::Pop(n) => { self.pop_bytes(*n as u64)?; }
+            Instruction::Load { size } => { let s = *size; let addr = self.pop_u64()?; match s {
+                IntSize::I8 => self.push_u8(self.get_u8(addr)?)?,
+                IntSize::I16 => self.push_u16(self.get_u16(addr)?)?,
+                IntSize::I32 => self.push_u32(self.get_u32(addr)?)?,
+                IntSize::I64 => self.push_u64(self.get_u64(addr)?)?,
+            } }
+            Instruction::Store { size } => { let s = *size; let addr = self.pop_u64()?; match s {
+                IntSize::I8 => { let v = self.pop_u8()?; self.set_u8(addr, v)? }
+                IntSize::I16 => { let v = self.pop_u16()?; self.set_u16(addr, v)? }
+                IntSize::I32 => { let v = self.pop_u32()?; self.set_u32(addr, v)? }
+                IntSize::I64 => { let v = self.pop_u64()?; self.set_u64(addr, v)? }
+            } }
             Instruction::PushSP => { self.push_u64(self.stack_pointer)? }
             Instruction::PushIP => { self.push_u64(self.program_counter)? }
             Instruction::PushMaxHeapSize => { self.push_u64(self.main_memory.len() as u64)? }
