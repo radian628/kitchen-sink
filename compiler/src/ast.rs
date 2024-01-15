@@ -48,3 +48,10 @@ pub enum Expression {
     FieldAccess { left: BTExpression, name: Tag<String> },
     VarDef { name: Tag<String>, explicit_type: Option<Tag<Tpe>>, value: BTExpression }
 }
+
+
+pub enum Statement {
+    ExpressionEval(Tag<Expression>),
+    If { condition: Tag<Expression>, block: Vec<Tag<Statement>>, else_block: Option<Vec<Tag<Statement>>> },
+    Label(Tag<String>)
+}
