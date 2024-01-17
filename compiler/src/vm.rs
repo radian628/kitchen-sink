@@ -1,3 +1,5 @@
+use std::io::{stdin, Read, stdout, Write};
+
 use crate::bytecode::Instruction;
 use crate::bytecode::{IntSize, FloatSize};
 
@@ -190,24 +192,69 @@ impl VM {
             Instruction::Mod(size) => sizes!(int biop size; a, b => a % b),
             Instruction::Modf(size) => sizes!(float biop size; a, b => a % b),
             Instruction::Cmp(size) => {
-                sizes!(int biop size; a, b => push_i64 match &a.cmp(&b) {
+                sizes!(int biop size; a, b => push_i64 match &a.cmp(&b) {  // TODO: i64?
                     std::cmp::Ordering::Less => -1,
                     std::cmp::Ordering::Equal => 0,
                     std::cmp::Ordering::Greater => 1,
                 });
             },
             Instruction::Cmpf(size) => {
-                sizes!(float biop size; a, b => push_i64 match &a.partial_cmp(&b) {
+                sizes!(float biop size; a, b => push_i64 match &a.partial_cmp(&b) {  // TODO: i64?
                     Some(std::cmp::Ordering::Less) => -1,
                     Some(std::cmp::Ordering::Equal) => 0,
                     Some(std::cmp::Ordering::Greater) => 1,
                     None => todo!("float compare failed, TODO: figure out return for this, or fault?")
                 });
             },
-            Instruction::Jmp(_) => todo!(),
-            Instruction::Jz(_) => todo!(),
-            Instruction::Read => todo!(),
-            Instruction::Write => todo!(),
+            Instruction::Jmp(addr) => { self.program_counter = *addr as u64; }
+            Instruction::Jz(size) => {
+                let v = match size {
+                    IntSize::I8 => self.pop_u8()? as u64,
+                    IntSize::I16 => self.pop_u16()? as u64,
+                    IntSize::I32 => self.pop_u32()? as u64,
+                    IntSize::I64 => self.pop_u64()? as u64,
+                };
+                let addr = self.pop_u64()?;
+                if v == 0 {
+                    self.program_counter = addr;
+                }
+            }
+            Instruction::Read => {
+                let fd = self.pop_u32()?;
+                let dst_start = self.pop_u64()?;
+                let max_len = self.pop_u16()?;
+                let mut buf = vec![0; max_len as usize];
+
+                match fd {
+                    0 => {
+                        // TODO: test harness
+                        let read = match stdin().read(buf.as_mut_slice()) {
+                            Ok(v) => { self.set_bytes(dst_start, &buf[0..v])?; v as u16 }
+                            Err(_) => { u16::MAX }
+                        };
+                        self.push_u16(read)?;
+                    }
+                    _ => todo!("reading from file descriptors other than 0 (stdin) is not yet supported")
+                }
+            }
+            Instruction::Write => {
+                let fd = self.pop_u32()?;
+                let src_start = self.pop_u64()?;
+                let max_len = self.pop_u16()?;
+                let buf = self.get_bytes(src_start, max_len as u64)?;
+
+                match fd {
+                    1 => {
+                        // TODO: test harness
+                        let written = match stdout().write(&buf) {
+                            Ok(v) => v as u16,
+                            Err(_) => u16::MAX,
+                        };
+                        self.push_u16(written)?;
+                    }
+                    _ => todo!("writing to file descriptors other than 1 (stdout) is not yet supported")
+                }
+            }
             Instruction::Push(v) => self.push_u8(*v)?,
             Instruction::Pop(n) => { self.pop_bytes(*n as u64)?; }
             Instruction::Load { size } => { let s = *size; let addr = self.pop_u64()?; match s {

@@ -65,9 +65,9 @@ pub enum Instruction {
     /// pops the last item from the stack with the given size, then pops an address.  If the first value is zero, jumps the address
     Jz(IntSize),
 
-    /// pops a 32 bit file descriptor, a destination address, and a 32 bit max size from the stack, then tries to read from the descriptor.  Returns the number of bytes read, or -1 if there's an error
+    /// pops a 32 bit file descriptor, a destination address, and a 16 bit max size from the stack, then tries to read from the descriptor.  Returns the number of bytes read as a 16 bit integer, or -1 if there's an error
     Read,
-    /// pops a 32 bit file descriptor, a source address, and a 32 bit max size from the stack, then tries to write to the descriptor.  Returns the number of bytes written, or -1 if there's an error
+    /// pops a 32 bit file descriptor, a source address, and a 16 bit max size from the stack, then tries to write to the descriptor.  Returns the number of bytes written as a 16 bit integer, or -1 if there's an error
     Write,
 
     /// push a byte to the stack (can be repeated to push larger types) (should we have it take a size param and allow for bigger payload?)
