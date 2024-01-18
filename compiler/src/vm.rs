@@ -8,16 +8,28 @@ pub struct VM {
     main_memory: Vec<u8>,
     stack: Vec<u8>,
     stack_pointer: u64,
-    program_counter: u64,
+    pub program_counter: u64,
     max_stack: u64
 }
 
+#[derive(Debug)]
 pub enum Fault {
     SegmentationFault, StackOverflow, ProgramEnded
 }
 
 impl VM {
     pub const STACK_START: u64 = 0x1000000000000000;
+
+    pub fn new(program: Vec<Instruction>, main_memory_len: usize, stack_len: usize) -> VM {
+        VM {
+            program,
+            main_memory: vec![0; main_memory_len],
+            stack: vec![],
+            stack_pointer: Self::STACK_START,
+            program_counter: 0,
+            max_stack: stack_len as u64
+        }
+    }
 
     // boilerplate garbage
 
@@ -29,7 +41,7 @@ impl VM {
         };
         if end < self.main_memory.len() as u64 {
             Ok(&self.main_memory[addr as usize..end as usize])
-        } else if addr > Self::STACK_START && end < Self::STACK_START + self.stack.len() as u64 {
+        } else if addr >= Self::STACK_START && end < Self::STACK_START + self.stack.len() as u64 {
             Ok(&self.stack[(addr - Self::STACK_START) as usize..(end - Self::STACK_START) as usize])
         } else {
             Err(Fault::SegmentationFault)
@@ -70,11 +82,20 @@ impl VM {
 
     // we might have to change this to return a vec for borrow checker reasons
     pub fn pop_bytes(&mut self, count: u64) -> Result<&[u8], Fault> {
-        let from = self.stack_pointer.checked_sub(count).ok_or(Fault::SegmentationFault)?;
-        let to = self.stack_pointer;
-        let bytes = &self.stack[(from - Self::STACK_START) as usize..(to - Self::STACK_START) as usize];
+        // println!("sp {} sp - count {} sp - count - start {}", self.stack_pointer, self.stack_pointer - count, (self.stack_pointer - count) as i64 - Self::STACK_START as i64);
+        let from = self.stack_pointer.checked_sub(count).ok_or(Fault::SegmentationFault)?.checked_sub(Self::STACK_START).ok_or(Fault::SegmentationFault)?;
+        let to = self.stack_pointer.checked_sub(Self::STACK_START).ok_or(Fault::SegmentationFault)?;
+        if from > to {
+            // println!("a");
+            return Err(Fault::SegmentationFault)
+        }
+        if to as usize > self.stack.len() {
+            // println!("b {to} {}", self.stack.len());
+            return Err(Fault::SegmentationFault);
+        }
+        let bytes = &self.stack[from as usize..to as usize];
 
-        self.stack_pointer = from;
+        self.stack_pointer = from + Self::STACK_START;
 
         Ok(bytes)
     }
@@ -93,6 +114,7 @@ impl VM {
         let end = (self.stack_pointer + bytes.len() as u64 - Self::STACK_START) as usize;
 
         self.stack[start..end].copy_from_slice(bytes);
+        self.stack_pointer += bytes.len() as u64;
 
         Ok(())
     }
@@ -107,11 +129,15 @@ impl VM {
     pub fn push_i64(&mut self, value: i64) -> Result<(), Fault> { self.push_u64(value as u64) }
 
     pub fn ensure_stack(&mut self, required_size: u64) -> Result<(), Fault> {
+        // println!("ensuring stack for {required_size} bytes");
         let current_usage = self.stack_pointer - Self::STACK_START;
+        // println!("currently using {current_usage} bytes");
         if current_usage + required_size >= self.max_stack {
+            // println!("too big, stack overflow");
             return Err(Fault::StackOverflow);
         }
-        if (self.stack.len() as u64) < current_usage + required_size {
+        if (self.stack.len() as u64) >= current_usage + required_size {
+            // println!("current backing array len: {} needed: {}", self.stack.len(), current_usage + required_size);
             return Ok(());
         }
         for _ in 0..(current_usage + required_size) - self.stack.len() as u64 {
