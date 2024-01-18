@@ -2,10 +2,21 @@ pub mod types;
 
 use types::*;
 
+use crate::bytecode::{IntSize, FloatSize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PrimitiveType {
+    Integer { signed: bool, size: IntSize },
+    Float(FloatSize),
+    Char(IntSize),
+    Bool
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tpe {
     Name(OpTag<String>),
-    // TODO: pointer, reference, array, parameterized type support
+    // TODO: reference, array, parameterized type support
+    Pointer(BTag<Tpe>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,7 +50,7 @@ pub enum MethodName {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
     Literal(OpTag<Literal>),
-    MethodCall { receiver: Option<BTExpression>, name: OpTag<String>, args: Vec<OpTag<Expression>>, type_params: Vec<OpTag<Tpe>> },
+    MethodCall { receiver: Option<BTExpression>, name: OpTag<MethodName>, args: Vec<OpTag<Expression>>, type_params: Vec<OpTag<Tpe>> },
     VarAccess(OpTag<String>),
     FieldAccess { left: BTExpression, name: OpTag<String> },
     VarDef { name: OpTag<String>, explicit_type: Option<OpTag<Tpe>>, value: BTExpression }
@@ -54,6 +65,30 @@ pub enum Statement {
     While { condition: OpTag<Expression>, block: Vec<OpTag<Statement>> }
 }
 
-pub struct File {
-    package: Option<QualifiedName>,
+#[derive(Debug, Clone)]
+pub struct FunctionDef {
+    pub name: OpTag<String>,
+    // TODO: type parameters
+    pub parameters: Vec<(OpTag<String>, OpTag<Tpe>)>,
+    pub return_tpe: Option<OpTag<Tpe>>,
+    pub block: Vec<OpTag<Statement>>
+}
+
+#[derive(Debug, Clone)]
+pub enum Declaration {
+    Func(FunctionDef),
+    // TODO: type definition struct
+}
+
+#[derive(Debug, Clone)]
+pub struct ImportStatement {
+    pub path: QualifiedName,
+    pub alias: Option<String>
+}
+
+#[derive(Debug, Clone)]
+pub struct ParsedFile {
+    pub package: Option<QualifiedName>,
+    pub imports: Vec<ImportStatement>,
+    pub decls: Vec<Declaration>
 }

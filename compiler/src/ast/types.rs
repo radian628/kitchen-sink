@@ -78,4 +78,23 @@ traits!(OpTag);
 pub type BTag<T> = Box<OpTag<T>>;
 pub type BTExpression = BTag<Expression>;
 
-pub struct QualifiedName(Vec<OpTag<String>>);
+#[derive(Clone)]
+pub struct QualifiedName(pub Vec<OpTag<String>>);
+
+impl Display for QualifiedName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (idx, item) in self.0.iter().enumerate() {
+            write!(f, "{}", *item)?;
+            if idx != self.0.len() - 1 {
+                write!(f, ".")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Debug for QualifiedName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self}")
+    }
+}

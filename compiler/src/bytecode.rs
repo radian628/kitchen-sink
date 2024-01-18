@@ -1,7 +1,7 @@
 // TODO: `Display` implementation for these types, mnemonics for instructions (i.e. XORB, XORH and such)
 
 // we can implement other sizes in Kitchen Sink code
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntSize {
     I8,
     I16,
@@ -9,7 +9,7 @@ pub enum IntSize {
     I64
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FloatSize {
     F32,
     F64,
