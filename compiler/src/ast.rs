@@ -2,18 +2,11 @@ pub mod types;
 
 use types::*;
 
-use crate::bytecode::{IntSize, FloatSize};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PrimitiveType {
-    Integer { signed: bool, size: IntSize },
-    Float(FloatSize),
-    Char(IntSize),
-    Bool
-}
+use crate::compiler::PrimitiveType;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tpe {
+    Primitive(PrimitiveType),
     Name(OpTag<String>),
     // TODO: reference, array, parameterized type support
     Pointer(BTag<Tpe>),
